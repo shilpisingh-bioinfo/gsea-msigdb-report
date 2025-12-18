@@ -1,0 +1,44 @@
+---
+title: "GSEA Report (MSigDB)"
+format:
+  html:
+    toc: true
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+library(readr)
+library(dplyr)
+library(ggplot2)
+```
+
+## Overview
+This report summarizes GSEA results using MSigDB gene sets.
+
+## Top pathways
+```{r}
+gsea <- readr::read_csv("outputs/gsea_results.csv", show_col_types = FALSE)
+top <- gsea %>% arrange(padj) %>% slice_head(n = 20) %>%
+  select(pathway, NES, pval, padj, size)
+top
+```
+
+## Dot plot (top 30 by FDR)
+```{r}
+gsea2 <- gsea %>%
+  mutate(minus_log10_fdr = -log10(padj + 1e-300)) %>%
+  arrange(padj) %>%
+  slice_head(n = 30)
+
+ggplot(gsea2, aes(x = NES, y = reorder(pathway, NES), size = size)) +
+  geom_point() +
+  theme_classic() +
+  labs(x = "NES", y = "Pathway", title = "Top 30 pathways (by FDR)", size = "Genes in set")
+```
+
+## Interpretation notes
+- Emphasize pathways with low FDR and coherent biology.
+- Compare patterns across multiple contrasts if available.
